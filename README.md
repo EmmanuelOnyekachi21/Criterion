@@ -162,6 +162,92 @@ graph LR
 
 ---
 
+## 📁 Project Structure
+
+```
+criterion/
+├── docker-compose.yml          # Multi-container orchestration
+├── .env.example                # Environment variables template
+├── .gitignore                  # Git ignore rules
+├── README.md                   # This file
+│
+├── backend/                    # FastAPI backend service
+│   ├── Dockerfile              # Backend container image
+│   ├── requirements.txt         # Python dependencies
+│   ├── alembic.ini             # Database migration config
+│   ├── alembic/                # Database migrations
+│   │   └── versions/           # Migration scripts
+│   │
+│   └── app/
+│       ├── main.py             # FastAPI app entry point
+│       ├── config.py           # Settings from environment
+│       ├── database.py         # SQLAlchemy async setup
+│       ├── celery_app.py       # Celery task queue config
+│       │
+│       ├── models/             # SQLAlchemy ORM models
+│       │   ├── merge_request.py
+│       │   ├── analysis.py
+│       │   ├── webhook.py
+│       │   ├── design_rationale.py
+│       │   └── override.py
+│       │
+│       ├── schemas/            # Pydantic request/response schemas
+│       │   ├── webhook.py
+│       │   └── analysis.py
+│       │
+│       ├── api/                # FastAPI route handlers
+│       │   ├── webhooks.py     # GitLab webhook endpoints
+│       │   ├── analyses.py     # Analysis endpoints
+│       │   └── health.py       # Health check endpoint
+│       │
+│       ├── tasks/              # Celery async tasks
+│       │   └── analysis.py     # Analysis task definitions
+│       │
+│       └── services/           # Business logic layer
+│           ├── gitlab_client.py    # GitLab API client
+│           ├── claude_client.py    # Anthropic Claude client
+│           └── analysis_service.py # Core analysis logic
+│
+└── frontend/                   # Streamlit dashboard
+    ├── Dockerfile              # Frontend container image
+    ├── requirements.txt         # Python dependencies
+    └── app.py                  # Streamlit app entry point
+```
+
+### Directory Breakdown
+
+**backend/** - Core analysis engine
+- Handles GitLab webhooks
+- Runs acceptance criteria validation
+- Extracts historical context
+- Generates analysis reports
+- Manages async task processing with Celery
+
+**frontend/** - User dashboard
+- Displays analysis results
+- Shows historical trends
+- Provides configuration UI
+- Built with Streamlit for rapid development
+
+**models/** - Data persistence layer
+- Merge request tracking
+- Analysis results storage
+- Design rationale history
+- Override configurations
+
+**services/** - Business logic (framework-agnostic)
+- GitLab integration
+- Claude AI interactions
+- Analysis algorithms
+- No FastAPI/Streamlit dependencies
+
+**api/** - HTTP endpoints
+- Webhook receivers
+- Analysis queries
+- Health monitoring
+
+---
+
 ## 🚀 Quick Start
 
 > **Note**: Full setup instructions coming soon. Project is under active development.

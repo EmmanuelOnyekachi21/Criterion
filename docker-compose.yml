@@ -1,0 +1,62 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: criterion
+      POSTGRES_USER: criterion
+      POSTGRES_PASSWORD: criterion_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"  
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://criterion:criterion_dev@db:5432/criterion
+      REDIS_URL: redis://redis:6379/0
+      GITLAB_WEBHOOK_SECRET: dev-secret
+      GITLAB_TOKEN: ${GITLAB_TOKEN}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+  
+  worker:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://criterion:criterion_dev@db:5432/criterion
+      REDIS_URL: redis://redis:6379/0
+      GITLAB_TOKEN: ${GITLAB_TOKEN}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./backend:/app
+    command: celery -A app.celery_app worker --loglevel=info
+  
+  frontend:
+    build: ./frontend
+    ports:
+      - "8501:8501"
+    environment:
+      BACKEND_URL: http://backend:8000
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+    command: streamlit run app.py --server.address 0.0.0.0
+
+volumes:
+  postgres_data:

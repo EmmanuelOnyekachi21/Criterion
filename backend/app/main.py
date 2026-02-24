@@ -16,8 +16,11 @@ from app.database import Base, engine
 async def lifespan(app: FastAPI):
     """Manage application startup and shutdown events.
 
-    On startup: Creates all database tables.
+    On startup: Logs application start.
     On shutdown: Disposes of the database engine.
+
+    Note: Database migrations are handled by Alembic, not at startup.
+    Run 'alembic upgrade head' to apply migrations.
 
     Args:
         app (FastAPI): The FastAPI application instance.
@@ -27,8 +30,8 @@ async def lifespan(app: FastAPI):
     """
     # Startup
     print("Criterion starting up!")
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # Database tables are managed by Alembic migrations
+    # Run: alembic upgrade head
     yield
     # Runs on shutdown
     await engine.dispose()

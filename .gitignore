@@ -3,6 +3,9 @@
 .env.local
 .env.*.local
 
+# Alembic
+alembic/
+
 # Python
 __pycache__/
 *.py[cod]

@@ -6,6 +6,11 @@
 # Alembic
 alembic/
 
+# log files
+logs/
+*.log
+*.log.*
+
 # Python
 __pycache__/
 *.py[cod]

@@ -18,6 +18,7 @@ class Settings(BaseSettings):
         gitlab_webhook_secret (str): Secret token for GitLab webhook
             verification.
         gitlab_token (str): GitLab API token for authentication.
+        gitlab_url (str): GitLab instance URL.
         anthropic_api_key (str): API key for Anthropic Claude integration.
         log_level (str): Logging level (DEBUG/INFO/WARNING/ERROR/CRITICAL).
         log_to_file (bool): Whether to enable file logging.
@@ -31,6 +32,7 @@ class Settings(BaseSettings):
     redis_url: str
     gitlab_webhook_secret: str
     gitlab_token: str
+    gitlab_url: str
     anthropic_api_key: str
 
     # Logging configuration

@@ -7,6 +7,7 @@ using AI-powered code review.
 import asyncio
 
 from sqlalchemy import func, update
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.celery_app import celery_app
 from app.database import AsyncSessionLocal
@@ -98,16 +99,7 @@ async def _run_analysis(
                     exc_info=True
                 )
                 # Mark analysis as failed
-                stmt = update(Analyses).where(
-                    Analyses.id == analysis_id
-                ).values(
-                    status="failed",
-                    error_message=str(exc),
-                    completed_at=func.now()
-                )
-
-                await session.execute(stmt)
-                await session.commit()
+                await _mark_failed(session, analysis_id, str(exc))
                 raise
 
             # Step 3: fetch MR details
@@ -123,15 +115,7 @@ async def _run_analysis(
                     'Error fetching MR details',
                     exc_info=True
                 )
-                stmt = update(Analyses).where(
-                    Analyses.id == analysis_id
-                ).values(
-                    status="failed",
-                    error_message=str(exc),
-                    completed_at=func.now()
-                )
-                await session.execute(stmt)
-                await session.commit()
+                await _mark_failed(session, analysis_id, str(exc))
                 raise
 
             # Step 4: for each changed file, get blame
@@ -205,15 +189,7 @@ async def _run_analysis(
 
             # Try to update status to failed
             try:
-                stmt = update(Analyses).where(
-                    Analyses.id == analysis_id
-                ).values(
-                    status="failed",
-                    error_message=str(exc),
-                    completed_at=func.now()
-                )
-                await session.execute(stmt)
-                await session.commit()
+                await _mark_failed(session, analysis_id, str(exc))
             except Exception as db_exc:
                 logger.error(
                     f"Failed to update analysis status: {db_exc}"
@@ -222,3 +198,30 @@ async def _run_analysis(
             raise
 
 
+async def _mark_failed(
+    session: AsyncSession,
+    analysis_id: int,
+    error: str
+) -> None:
+    """Mark an analysis as failed in the database.
+
+    Updates the analysis record with failed status, error message, and
+    completion timestamp.
+
+    Args:
+        session (AsyncSession): SQLAlchemy async session.
+        analysis_id (int): Database ID of the analysis record.
+        error (str): Error message to store.
+
+    Returns:
+        None
+    """
+    stmt = update(Analyses).where(
+        Analyses.id == analysis_id
+    ).values(
+        status="failed",
+        error_message=str(error),
+        completed_at=func.now()
+    )
+    await session.execute(stmt)
+    await session.commit()

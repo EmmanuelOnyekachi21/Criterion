@@ -12,6 +12,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
+from typing import List
+
 
 class Analyses(Base):
     """Analysis results for merge request code reviews.
@@ -79,6 +81,14 @@ class Analyses(Base):
         "Webhooks",
         back_populates="analysis",
         uselist=False
+    )
+    overrides: Mapped[List["Overrides"]] = relationship(
+        "Overrides",
+        back_populates="analysis"
+    )
+    design_rationales: Mapped[List["DesignRationales"]] = relationship(
+        "DesignRationales",
+        back_populates="analysis"
     )
 
 

@@ -1,3 +1,4 @@
+# app/services/gitlab_client.py
 """GitLab API client for interacting with merge requests and issues.
 
 This module provides a client wrapper around the python-gitlab library
@@ -275,5 +276,119 @@ class GitlabClient:
                 exc_info=True
             )
             raise
-
+    
+    def get_commit_mrs(self, project_id: int, commit_sha: str):
+        """Find which MR(s) introduced a commit.
         
+        This traces a commit back to the merge request(s) that introduced it.
+        Useful for understanding the historical context of code changes.
+        
+        Args:
+            project_id (int): GitLab project ID.
+            commit_sha (str): Git commit SHA hash.
+            
+        Returns:
+            list[dict]: List of MRs that contain this commit.
+                Each dict contains: iid, title, state, merged_at, web_url.
+                Returns empty list if commit has no associated MRs.
+                
+        Raises:
+            Exception: If fetching commit MRs fails.
+        """
+        try:
+            logger.info(
+                f"Finding MRs for commit {commit_sha[:8]} in project {project_id}"
+            )
+            
+            # Get the project
+            project = self.gl.projects.get(id=project_id)
+            
+            # Get the commit
+            commit = project.commits.get(commit_sha)
+            
+            # Get MRs associated with this commit
+            # Note: This returns MRs where this commit appears
+            mrs = commit.merge_requests()
+            
+            # Extract relevant information from each MR
+            result = []
+            for mr in mrs:
+                result.append({
+                    'iid': mr['iid'],
+                    'title': mr['title'],
+                    'state': mr['state'],
+                    'merged_at': mr.get('merged_at'),
+                    'web_url': mr.get('web_url'),
+                    'description': mr.get('description', '')
+                })
+            
+            logger.info(f"Found {len(result)} MR(s) for commit {commit_sha[:8]}")
+            return result
+            
+        except Exception as e:
+            logger.error(
+                f"Failed to get MRs for commit {commit_sha[:8]}: {str(e)}",
+                exc_info=True
+            )
+            # Return empty list instead of raising - it's not an error
+            # if a commit has no MRs (could be a direct push)
+            return []
+
+    def get_mr_notes(self, project_id: int, mr_iid: int, max_notes: int = 20):
+        """Fetch discussion notes/comments from a merge request.
+        
+        Gets the conversation from an MR to understand the reasoning
+        and decisions made during code review.
+        
+        Args:
+            project_id (int): GitLab project ID.
+            mr_iid (int): Merge request internal ID.
+            max_notes (int): Maximum number of notes to return (default 20).
+            
+        Returns:
+            list[dict]: List of notes/comments from the MR.
+                Each dict contains: author, body, created_at.
+                Sorted by creation date (oldest first).
+                
+        Raises:
+            Exception: If fetching MR notes fails.
+        """
+        try:
+            logger.info(
+                f"Fetching notes from MR !{mr_iid} in project {project_id}"
+            )
+            
+            # Get the project
+            project = self.gl.projects.get(id=project_id)
+            
+            # Get the merge request
+            mr = project.mergerequests.get(mr_iid)
+            
+            # Get notes (comments) from the MR
+            # per_page limits how many we fetch at once
+            notes = mr.notes.list(per_page=max_notes, order_by='created_at', sort='asc')
+            
+            # Extract relevant information
+            result = []
+            for note in notes:
+                # Skip system notes (like "changed the title", "merged", etc)
+                # We only want human comments
+                if note.system:
+                    continue
+                    
+                result.append({
+                    'author': note.author.get('name', 'Unknown'),
+                    'body': note.body,
+                    'created_at': note.created_at
+                })
+            
+            logger.info(f"Found {len(result)} note(s) in MR !{mr_iid}")
+            return result
+            
+        except Exception as e:
+            logger.error(
+                f"Failed to get notes for MR !{mr_iid}: {str(e)}",
+                exc_info=True
+            )
+            # Return empty list instead of raising
+            return []

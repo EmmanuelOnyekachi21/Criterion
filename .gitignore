@@ -6,6 +6,7 @@
 # Alembic
 alembic/
 
+PROJECT_*
 # log files
 logs/
 *.log

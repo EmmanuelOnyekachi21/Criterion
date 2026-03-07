@@ -22,12 +22,14 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://criterion:criterion_dev@db:5432/criterion
       REDIS_URL: redis://redis:6379/0
-      GITLAB_WEBHOOK_SECRET: dev-secret
+      GITLAB_WEBHOOK_SECRET: ${GITLAB_WEBHOOK_SECRET}
       GITLAB_TOKEN: ${GITLAB_TOKEN}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     depends_on:
       - db
       - redis
+    env_file:
+      - .env
     volumes:
       - ./backend:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
@@ -37,11 +39,15 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://criterion:criterion_dev@db:5432/criterion
       REDIS_URL: redis://redis:6379/0
+      GITLAB_WEBHOOK_SECRET: ${GITLAB_WEBHOOK_SECRET}
       GITLAB_TOKEN: ${GITLAB_TOKEN}
+      GITLAB_URL: ${GITLAB_URL}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     depends_on:
       - db
       - redis
+    env_file:
+      - .env
     volumes:
       - ./backend:/app
     command: celery -A app.celery_app worker --loglevel=info

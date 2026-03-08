@@ -5,6 +5,7 @@ and queues analysis tasks for processing.
 """
 
 import hmac
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import func, select
@@ -104,6 +105,16 @@ async def receive_webhook(
         # Process webhook
         logger.info(f"Processing webhook {unique_key}: action={action}")
 
+        # Parse gitlab_created_at from ISO string to datetime
+        gitlab_created_at = None
+        if payload.object_attributes.created_at:
+            try:
+                gitlab_created_at = datetime.fromisoformat(
+                    payload.object_attributes.created_at.replace('Z', '+00:00')
+                )
+            except (ValueError, AttributeError) as e:
+                logger.warning(f"Failed to parse created_at: {e}")
+
         # Upsert merge request
         stmt = insert(MergeRequests).values(
             gitlab_project_id=payload.project.id,
@@ -117,7 +128,7 @@ async def receive_webhook(
             target_branch=payload.object_attributes.target_branch,
             mr_url=payload.object_attributes.url,
             state=payload.object_attributes.state,
-            gitlab_created_at=payload.object_attributes.created_at,
+            gitlab_created_at=gitlab_created_at,
             first_seen_at=func.now(),
             last_updated_at=func.now(),
         )
@@ -175,7 +186,7 @@ async def receive_webhook(
         return {
             "status": "queued",
             "event_type": payload.object_kind,
-            "analysis_id": analysis_id
+            "analysis_id": analysis_id,
         }
     else:
         # Log ignored actions

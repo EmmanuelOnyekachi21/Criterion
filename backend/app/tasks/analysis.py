@@ -110,7 +110,7 @@ async def _run_analysis(
                     exc_info=True
                 )
                 # Mark analysis as failed
-                async with AsyncSessionLocal as failed_session:
+                async with AsyncSessionLocal() as failed_session:
                     await _mark_failed(failed_session, analysis_id, str(exc))
                 raise
 
@@ -145,7 +145,7 @@ async def _run_analysis(
                     'Error fetching MR details',
                     exc_info=True
                 )
-                async with AsyncSessionLocal as failed_session:
+                async with AsyncSessionLocal() as failed_session:
                     await _mark_failed(failed_session, analysis_id, str(exc))
                 raise
 
@@ -154,7 +154,7 @@ async def _run_analysis(
             source_branch = mr_details['source_branch']
 
             for change in mr_changes:
-                file_path = change.get('new_path') or change.get('old_path')
+                file_path = change.get('new_path')
 
                 # Skip deleted files
                 if not file_path or change.get('deleted_file'):
@@ -273,7 +273,8 @@ async def _run_analysis(
             else:
                 action = "skip"
             
-
+            # Log claude response
+            logger.info(f"\n\n\nClaude responded: {claude_result}\n\n\n")
             # Save to DesignRationales table
             
             # Create a summary of all changed files
@@ -289,8 +290,7 @@ async def _run_analysis(
                 tradeoffs=claude_result.get('tradeoffs'),
                 rationale_found=claude_result.get('rationale_found', False),
                 confidence=confidence,
-                action_taken=action,
-                file_path=files_changed,  # Summary of files
+                filepath=files_changed,  # Summary of files
                 content_hash=None,  # Not needed for MR-level analysis
             )
 
@@ -308,7 +308,7 @@ async def _run_analysis(
             stmt = update(Analyses).where(
                 Analyses.id == analysis_id
             ).values(
-                action=action,
+                action_taken=action,
                 confidence_score=confidence,
                 acceptance_criteria=acceptance_criteria_result,
                 status="completed",
@@ -329,7 +329,7 @@ async def _run_analysis(
 
             # Try to update status to failed
             try:
-                async with AsyncSessionLocal as failed_session:
+                async with AsyncSessionLocal() as failed_session:
                     await _mark_failed(failed_session, analysis_id, str(exc))
             except Exception as db_exc:
                 await failed_session.rollback()

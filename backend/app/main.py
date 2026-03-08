@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.api import analyses, health, webhooks
+from app.api import admin, analyses, health, webhooks
 from app.database import Base, engine
 from app.logger import logger
 from app.middleware.logging import RequestLoggingMiddleware
@@ -53,6 +53,7 @@ logger.info("FastAPI application initialized")
 # Add middlewares
 app.add_middleware(RequestLoggingMiddleware)
 
-app.include_router(webhooks.router, prefix="/webhooks")
-# app.include_router(analyses.router, prefix="/analyses")
+app.include_router(webhooks.router, prefix="/api/webhooks")
+# app.include_router(analyses.router, prefix="/api/analyses")
+app.include_router(admin.router, prefix="/api")
 app.include_router(health.router)

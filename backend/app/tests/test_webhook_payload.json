@@ -1,0 +1,27 @@
+{
+  "object_kind": "merge_request",
+  "event_type": "merge_request",
+  "user": {
+    "id": 12345,
+    "name": "Test User",
+    "username": "testuser"
+  },
+  "project": {
+    "id": 79969617,
+    "name": "trustbridge-escrow",
+    "web_url": "https://gitlab.com/EmmanuelOnyekachi21/trustbridge-escrow",
+    "path_with_namespace": "EmmanuelOnyekachi21/trustbridge-escrow"
+  },
+  "object_attributes": {
+    "id": 123456789,
+    "iid": 1,
+    "title": "Test MR for analysis workflow",
+    "description": "This MR adds test sections",
+    "state": "opened",
+    "source_branch": "test-mr-analysis",
+    "target_branch": "main",
+    "url": "https://gitlab.com/EmmanuelOnyekachi21/trustbridge-escrow/-/merge_requests/1",
+    "action": "open",
+    "created_at": "2026-03-04T12:00:00Z"
+  }
+}

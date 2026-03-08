@@ -95,12 +95,12 @@ class HistoricalTracer:
     
         if linked_issue_iids:
             # Limit to MAX_ISSUES to keep prompt manageable
-            issue_to_fetch = linked_issue_iids[:MAX_ISSUES]
+            issue_to_fetch = linked_issue_iids[:self.MAX_ISSUES]
 
-            if len(linked_issue_iids) > MAX_ISSUES:
+            if len(linked_issue_iids) > self.MAX_ISSUES:
                 logger.warning(
                     f"MR has {len(linked_issue_iids)} linked issues, "
-                    f"limiting to {MAX_ISSUES}"
+                    f"limiting to {self.MAX_ISSUES}"
                 )
 
             for issue_iid in issue_to_fetch:

@@ -22,7 +22,7 @@ class GitLabUser(BaseModel):
     id: int
     name: str
     username: str
-    avatar_url: Optional = None
+    avatar_url: Optional[str] = None
 
 
 class GitLabProject(BaseModel):

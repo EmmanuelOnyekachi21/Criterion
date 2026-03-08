@@ -54,7 +54,7 @@ class DesignRationales(Base):
     filepath: Mapped[str] = mapped_column(String, nullable=False)
     function_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     class_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    content_hash: Mapped[str] = mapped_column(String, nullable=False)
+    content_hash: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     what: Mapped[str] = mapped_column(Text, nullable=False)
     why: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     context: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

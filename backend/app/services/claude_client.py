@@ -193,7 +193,7 @@ class ClaudeClient:
                 # Start with basic commit info
                 commit_text = (
                     f"Commit: {c['sha'][:8]}\n"
-                    f"Author: {c['author']}\n"
+                    f"Author: {c['author_name']}\n"
                     f"Message:\n{c['message']}"
                 )
                 
